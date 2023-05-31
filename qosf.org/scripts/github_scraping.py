@@ -12,6 +12,7 @@ Usage:
     $ python3 github_scraping.py
 """
 
+
 from functools import reduce
 
 import re
@@ -31,7 +32,7 @@ for line in readme.content.decode().splitlines():
 
     if line[:2] == '##': # extract the heading lines
 
-        heading = reduce(lambda x,y: x + f' {y}', line.split()[1:]) # get the name of the heading
+        heading = reduce(lambda x,y: f'{x} {y}', line.split()[1:])
 
         if heading not in unneeded_sections:
             category_dict = {
@@ -40,20 +41,19 @@ for line in readme.content.decode().splitlines():
             }
             OSQSP_list.append(category_dict)
 
-    else: # these must be projects
-        if heading and heading not in unneeded_sections:
-            if heading not in projects.keys():
-                projects[heading] = [line]
-            else:
-                projects[heading].append(line)
+    elif heading and heading not in unneeded_sections:
+        if heading in projects:
+            projects[heading].append(line)
 
+        else:
+            projects[heading] = [line]
 for heading, lines in projects.items():
     for line in lines:
 
         if line[:2] == '- ':
-            project_name = re.search(r'\[(.*?)\]', line).group(1)
-            project_description = re.search(r'^.*-.*- (.*)$', line).group(1)#.strip('\'')
-            project_url = re.search(r'\((.*?)\)', line).group(1)
+            project_name = re.search(r'\[(.*?)\]', line)[1]
+            project_description = re.search(r'^.*-.*- (.*)$', line)[1]
+            project_url = re.search(r'\((.*?)\)', line)[1]
             heading_index = OSQSP_list.index(list(filter(lambda x: x['name'] == heading, OSQSP_list))[0])
             OSQSP_list[heading_index]['projects'].append({
                 'name': project_name,
